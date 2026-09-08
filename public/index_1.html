@@ -1,1 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Winston-Salem 一日游 · 9/13</title>
+<script>
+  // Set theme immediately (before paint) to avoid a flash of the wrong theme.
+  (function(){
+    var h = new Date().getHours();
+    var isNight = (h >= 19 || h < 7);
+    document.documentElement.dataset.theme = isNight ? 'night' : 'day';
+  })();
+</script>
+<style>
+  :root{
+    --bg:#F2ECDC;
+    --surface:#FBF8EE;
+    --ink:#211D16;
+    --ink-soft:#5B5540;
+    --ink-faint:#8C8567;
+    --gold:#9C7A2C;
+    --green:#3F5D45;
+    --brick:#8B3A2B;
+    --navy:#2B3B4E;
+    --line:#D9CFB4;
+    --shadow: rgba(33,29,22,0.08);
+    --radius: 3px;
+  }
+  html[data-theme="night"]{
+    --bg:#14171D;
+    --surface:#1B2029;
+    --ink:#EDE7D8;
+    --ink-soft:#B7B09A;
+    --ink-faint:#7C7768;
+    --gold:#D9A94A;
+    --green:#7FA189;
+    --brick:#D07B60;
+    --navy:#8FB0D6;
+    --line:#333A46;
+    --shadow: rgba(0,0,0,0.35);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    transition: background .6s ease, color .6s ease;
+  }
+  .wrap{ max-width:560px; margin:0 auto; padding:0 20px 64px; }
+  a{ color:inherit; }
+  a:focus-visible, button:focus-visible, summary:focus-visible{
+    outline: 2px solid var(--navy);
+    outline-offset: 3px;
+  }
+  h1,h2,h3{
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-weight:400;
+    margin:0;
+  }
+  .serif{ font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
 
+  /* ---------- Header ---------- */
+  header.page{ padding:36px 0 18px; }
+  .eyebrow-date{
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+  header.page h1{
+    font-size:1.7rem;
+    margin-top:6px;
+    line-height:1.25;
+  }
+  header.page p.sub{
+    margin:8px 0 0;
+    color:var(--ink-soft);
+    font-size:0.92rem;
+  }
+
+  /* ---------- Hero / countdown ---------- */
+  .hero{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 20px 24px;
+    margin:18px 0 34px;
+    box-shadow: 0 1px 0 var(--shadow);
+  }
+  .hero .label{
+    font-size:0.82rem;
+    color:var(--ink-soft);
+  }
+  .hero .event-title{
+    font-size:1.2rem;
+    margin:4px 0 2px;
+  }
+  .hero .event-place{
+    font-size:0.88rem;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .countdown{
+    display:flex;
+    gap:18px;
+  }
+  .countdown .cd-unit{
+    text-align:left;
+  }
+  .countdown .cd-num{
+    font-size:2.15rem;
+    font-variant-numeric: tabular-nums;
+    font-family: Georgia, serif;
+    line-height:1;
+    color:var(--navy);
+  }
+  html[data-theme="night"] .countdown .cd-num{ color:var(--gold); }
+  .countdown .cd-tag{
+    font-size:0.72rem;
+    color:var(--ink-faint);
+    margin-top:4px;
+  }
+  .hero.done .event-title{ color:var(--ink-soft); }
+
+  /* ---------- Section headers ---------- */
+  section{ margin-bottom:40px; }
+  section > h2{
+    font-size:1.05rem;
+    color:var(--ink);
+    margin-bottom:14px;
+    padding-bottom:8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* ---------- Map ---------- */
+  .map-box svg{ width:100%; height:auto; display:block; }
+  .map-caption{
+    font-size:0.78rem;
+    color:var(--ink-faint);
+    margin-top:8px;
+  }
+  .pin-link{ cursor:pointer; }
+  .pin-link:hover .pin-dot, .pin-link:focus-visible .pin-dot{ r:9; }
+  .pin-dot{ transition: r .15s ease; }
+  .pin-label{
+    font-family: Georgia, serif;
+    font-size:12.5px;
+  }
+  .route-day{ stroke:var(--navy); }
+  .route-dusk{ stroke:var(--brick); }
+  .dot-ink{ fill:var(--ink); }
+  .dot-gold{ fill:var(--gold); }
+  .dot-green{ fill:var(--green); }
+  .dot-brick{ fill:var(--brick); }
+  .dot-navy{ fill:var(--navy); }
+  .lbl{ fill:var(--ink); }
+  .lbl-faint{ fill:var(--ink-faint); }
+  .ring-faint{ stroke:var(--ink-faint); }
+
+  /* ---------- Confirmed info ---------- */
+  .confirm-list{ list-style:none; margin:0; padding:0; }
+  .confirm-list li{
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+    font-size:0.92rem;
+  }
+  .confirm-list li:last-child{ border-bottom:none; }
+  .confirm-list .k{
+    color:var(--ink-soft);
+    font-size:0.78rem;
+    display:block;
+    margin-bottom:3px;
+  }
+  .tag{
+    display:inline-block;
+    font-size:0.72rem;
+    color:var(--brick);
+    border:1px solid var(--brick);
+    border-radius:20px;
+    padding:1px 9px;
+    margin-left:6px;
+    white-space:nowrap;
+    vertical-align:middle;
+  }
+
+  /* ---------- Day route expand ---------- */
+  details.day-route{
+    margin-bottom:18px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:0;
+    background:var(--surface);
+  }
+  details.day-route summary{
+    cursor:pointer;
+    padding:12px 16px;
+    font-size:0.9rem;
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  details.day-route summary::-webkit-details-marker{ display:none; }
+  details.day-route summary .chev{ transition: transform .2s ease; color:var(--ink-faint); }
+  details.day-route[open] summary .chev{ transform: rotate(180deg); }
+  .day-route-body{ padding:0 16px 16px; }
+  .day-route-body ol{ margin:0 0 14px; padding-left:20px; font-size:0.88rem; color:var(--ink-soft); }
+  .day-route-body ol li{ margin-bottom:4px; }
+  .nav-btn{
+    display:inline-block;
+    font-size:0.85rem;
+    text-decoration:none;
+    color:var(--surface);
+    background:var(--navy);
+    border-radius:20px;
+    padding:9px 18px;
+  }
+  html[data-theme="night"] .nav-btn{ color:#14171D; background:var(--gold); }
+
+  /* ---------- Itinerary ---------- */
+  .timeline{ position:relative; padding-left:20px; }
+  .timeline::before{
+    content:"";
+    position:absolute;
+    left:4px; top:6px; bottom:6px;
+    width:1px;
+    background: var(--line);
+  }
+  .stop{
+    position:relative;
+    padding-bottom:26px;
+  }
+  .stop:last-child{ padding-bottom:0; }
+  .stop::before{
+    content:"";
+    position:absolute;
+    left:-20px; top:4px;
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--bg);
+    border:2px solid var(--ink-faint);
+  }
+  .stop.is-next::before{
+    border-color:var(--brick);
+    background:var(--brick);
+  }
+  .stop-grid{
+    display:grid;
+    grid-template-columns: 58px 1fr;
+    gap:14px;
+  }
+  .stop-time{
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    padding-top:2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stop.is-next .stop-time{ color:var(--brick); font-weight:600; }
+  .stop-title{
+    font-size:1rem;
+    margin:0 0 3px;
+  }
+  .stop-place{
+    font-size:0.85rem;
+    text-decoration:none;
+    border-bottom:1px dotted var(--ink-faint);
+  }
+  .stop-note{
+    font-size:0.86rem;
+    color:var(--ink-soft);
+    margin:6px 0 0;
+  }
+  .stop-pending{
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:8px 10px;
+    margin-top:6px;
+    font-size:0.82rem;
+    color:var(--ink-faint);
+  }
+
+  /* ---------- Todo ---------- */
+  .todo-list{ margin:0; padding-left:20px; font-size:0.94rem; }
+  .todo-list li{ margin-bottom:10px; }
+
+  /* ---------- Tips ---------- */
+  .tips-list{ margin:0; padding-left:20px; font-size:0.92rem; color:var(--ink-soft); }
+  .tips-list li{ margin-bottom:12px; }
+  .tips-list strong{ color:var(--ink); font-weight:600; }
+
+  footer.page{
+    font-size:0.78rem;
+    color:var(--ink-faint);
+    padding-top:8px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <div class="eyebrow-date">2026 年 9 月 13 日 · 星期日 · 2 人</div>
+    <h1>Winston-Salem 一日游</h1>
+    <p class="sub">Durham 出发，逛校园、花园和美术馆，当天回家。</p>
+  </header>
+
+  <!-- 1. 此刻关注 -->
+  <div class="hero" id="hero">
+    <div class="label">此刻关注</div>
+    <div class="event-title" id="heroTitle">加载中…</div>
+    <div class="event-place" id="heroPlace"></div>
+    <div class="countdown" id="heroCountdown">
+      <div class="cd-unit"><div class="cd-num" id="cdD">–</div><div class="cd-tag">天</div></div>
+      <div class="cd-unit"><div class="cd-num" id="cdH">–</div><div class="cd-tag">时</div></div>
+      <div class="cd-unit"><div class="cd-num" id="cdM">–</div><div class="cd-tag">分</div></div>
+      <div class="cd-unit"><div class="cd-num" id="cdS">–</div><div class="cd-tag">秒</div></div>
+    </div>
+  </div>
+
+  <!-- 2. 行程总览地图 -->
+  <section>
+    <h2>行程总览</h2>
+    <div class="map-box" id="mapBox">
+      <svg viewBox="0 0 340 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="全天路线示意图">
+        <defs>
+          <filter id="wobble" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="7" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"/>
+          </filter>
+        </defs>
+
+        <!-- outbound (day) route -->
+        <path class="route-day" d="M170,580 C130,540 90,500 108,462 C122,432 168,412 198,386 C214,372 176,362 142,344 C118,330 122,306 142,300 C168,292 196,268 214,240 C226,220 222,200 230,192"
+              fill="none" stroke-width="2.5" stroke-linecap="round" filter="url(#wobble)"/>
+
+        <!-- return (dusk) route -->
+        <path class="route-dusk" d="M230,192 C244,224 252,268 250,320 C248,368 258,410 250,438 C244,456 254,470 250,462 C238,472 190,536 170,580"
+              fill="none" stroke-width="2.5" stroke-dasharray="1 7" stroke-linecap="round" filter="url(#wobble)"/>
+
+        <!-- pins -->
+        <g class="pin" data-place="home">
+          <a class="pin-link mapLink" data-place="home" href="#" aria-label="导航到 Crowne at 501（起点/终点）">
+            <circle class="pin-dot dot-ink" cx="170" cy="580" r="7"/>
+            <text x="184" y="584" class="pin-label lbl">Crowne at 501（起点/终点）</text>
+          </a>
+        </g>
+        <g class="pin" data-place="wfu">
+          <a class="pin-link mapLink" data-place="wfu" href="#" aria-label="导航到 Wake Forest 校园">
+            <circle class="pin-dot dot-gold" cx="108" cy="462" r="7"/>
+            <text x="10" y="450" class="pin-label lbl">Wake Forest 校园</text>
+          </a>
+        </g>
+        <g class="pin" data-place="village">
+          <a class="pin-link mapLink" data-place="village" href="#" aria-label="导航到 Reynolda Gardens ＆ Village">
+            <circle class="pin-dot dot-green" cx="198" cy="386" r="7"/>
+            <text x="212" y="382" class="pin-label lbl">Reynolda Gardens</text>
+            <text x="212" y="397" class="pin-label lbl">＆ Village</text>
+          </a>
+        </g>
+        <g class="pin" data-place="tavern">
+          <a class="pin-link mapLink" data-place="tavern" href="#" aria-label="导航到 Village Tavern 午饭">
+            <circle class="pin-dot dot-brick" cx="142" cy="300" r="7"/>
+            <text x="10" y="296" class="pin-label lbl">午饭：Village Tavern</text>
+          </a>
+        </g>
+        <g class="pin" data-place="house">
+          <a class="pin-link mapLink" data-place="house" href="#" aria-label="导航到 Reynolda House 美术馆">
+            <circle class="pin-dot dot-navy" cx="230" cy="192" r="7"/>
+            <text x="244" y="188" class="pin-label lbl">Reynolda House</text>
+            <text x="244" y="203" class="pin-label lbl">美术馆</text>
+          </a>
+        </g>
+        <g class="pin">
+          <circle class="ring-faint" cx="250" cy="438" r="7" fill="none" stroke-width="1.5" stroke-dasharray="2 2"/>
+          <text x="264" y="434" class="pin-label lbl-faint">生日晚饭</text>
+          <text x="264" y="449" class="pin-label lbl-faint">（地点待定）</text>
+        </g>
+      </svg>
+    </div>
+    <p class="map-caption">示意图，非精确比例。实线＝白天去程，虚线＝傍晚回程。点任意地点直接唤起 Google 地图导航。</p>
+  </section>
+
+  <!-- 3. 已确认信息 -->
+  <section>
+    <h2>已确认信息</h2>
+    <ul class="confirm-list">
+      <li>
+        <span class="k">交通</span>
+        自驾往返，无机票、无租车
+      </li>
+      <li>
+        <span class="k">住宿</span>
+        当天往返，不过夜
+      </li>
+      <li>
+        <span class="k">Reynolda House 门票</span>
+        暂未购买<span class="tag">待订</span><br>
+        周日场次 1:30–4:30pm，成人 $18。历史主楼今年因 HVAC 翻修停了大半年，8/5 才重新开放，建议尽快在官网买定时票，避免临时约不上。
+      </li>
+      <li>
+        <span class="k">Village Tavern 午饭</span>
+        <a class="mapLink" data-place="tavern" href="#">221 Reynolda Village, Winston-Salem, NC 27106</a>
+        · (336) 748-0221 <span class="tag">建议致电确认</span><br>
+        官网显示可预订（和最早了解到的"不接受预订"不一致），建议出发前打个电话或用 Resy 定个位置，避开周日教堂散场后的高峰。
+      </li>
+    </ul>
+  </section>
+
+  <!-- 4. 逐日行程 -->
+  <section>
+    <h2>逐日行程</h2>
+
+    <details class="day-route">
+      <summary>
+        <span>展开今日路线 + 一键导航全程</span>
+        <span class="chev">▾</span>
+      </summary>
+      <div class="day-route-body">
+        <ol>
+          <li>Crowne at 501（起点）</li>
+          <li>Wake Forest 校园</li>
+          <li>Reynolda Gardens ＆ Village</li>
+          <li>Village Tavern</li>
+          <li>Reynolda House 美术馆</li>
+          <li>Crowne at 501（终点）</li>
+        </ol>
+        <a class="nav-btn" id="fullDayNav" href="#" target="_blank" rel="noopener">一键打开全程多点导航</a>
+      </div>
+    </details>
+
+    <div class="timeline" id="timeline">
+
+      <div class="stop" data-iso="2026-09-13T08:30:00-04:00" data-title="出发前往 Winston-Salem" data-place="Crowne at 501 出发">
+        <div class="stop-grid">
+          <div class="stop-time">8:30</div>
+          <div>
+            <h3 class="stop-title">从 Durham 出发</h3>
+            <a class="stop-place mapLink" data-place="home" href="#">Crowne at 501 Apartments, 2031 Honeycutt Dr, Durham, NC 27707</a>
+            <p class="stop-note">车程约 1 小时 15–20 分钟，出发前用手机导航再确认一次实时路况。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop" data-iso="2026-09-13T09:50:00-04:00" data-title="Wake Forest 校园漫步" data-place="Hearn Plaza / Wait Chapel">
+        <div class="stop-grid">
+          <div class="stop-time">9:50</div>
+          <div>
+            <h3 class="stop-title">Wake Forest 校园漫步</h3>
+            <a class="stop-place mapLink" data-place="wfu" href="#">Wait Chapel · Hearn Plaza，Winston-Salem, NC 27109</a>
+            <p class="stop-note">Wait Chapel、砖石 Quad、Z. Smith Reynolds 图书馆，随便走走，45–60 分钟够用。周末大部分停车场对访客开放，不用许可证，建议从 University Parkway 或 Reynolda Road 方向进校园。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop" data-iso="2026-09-13T11:00:00-04:00" data-title="Reynolda Gardens ＆ Village" data-place="Reynolda Village">
+        <div class="stop-grid">
+          <div class="stop-time">11:00</div>
+          <div>
+            <h3 class="stop-title">Reynolda Gardens ＆ Village</h3>
+            <a class="stop-place mapLink" data-place="village" href="#">2201 Reynolda Road, Winston-Salem, NC 27106</a>
+            <p class="stop-note">花园和温室常年天亮到天黑免费开放；Village 里的老庄园建筑改成了小店和画廊，值得逛逛。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop" data-iso="2026-09-13T12:30:00-04:00" data-title="午饭" data-place="Village Tavern">
+        <div class="stop-grid">
+          <div class="stop-time">12:30</div>
+          <div>
+            <h3 class="stop-title">午饭 · Village Tavern <span class="tag">建议先订位</span></h3>
+            <a class="stop-place mapLink" data-place="tavern" href="#">221 Reynolda Village, Winston-Salem, NC 27106 · (336) 748-0221</a>
+            <p class="stop-note">12:30 到店能避开周日教堂散场后的排队高峰。官网显示接受预订，建议提前打电话或用 Resy 定一下。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop" data-iso="2026-09-13T13:30:00-04:00" data-title="Reynolda House 美术馆" data-place="Reynolda House">
+        <div class="stop-grid">
+          <div class="stop-time">13:30</div>
+          <div>
+            <h3 class="stop-title">Reynolda House 美术馆 <span class="tag">建议先买票</span></h3>
+            <a class="stop-place mapLink" data-place="house" href="#">2250 Reynolda Road, Winston-Salem, NC 27106</a>
+            <p class="stop-note">周日仅 1:30–4:30pm 开放（周二至周六是 9:30am 开），4:30 闭馆。历史主楼今年 1–8 月因 HVAC 翻修关闭，8/5 才重开，人气可能比平时高，建议提前在官网买定时票。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop" data-iso="2026-09-13T16:00:00-04:00" data-title="离开 Winston-Salem" data-place="返程">
+        <div class="stop-grid">
+          <div class="stop-time">16:00</div>
+          <div>
+            <h3 class="stop-title">离开 Winston-Salem</h3>
+            <p class="stop-note">博物馆 4:30 闭馆，4 点前后动身，往回开。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop" data-iso="2026-09-13T19:00:00-04:00" data-title="生日晚饭" data-place="地点待定">
+        <div class="stop-grid">
+          <div class="stop-time">~19:00</div>
+          <div>
+            <h3 class="stop-title">生日晚饭</h3>
+            <div class="stop-pending">地点还没定 — 定下来告诉我，我会把这一条的时间、地址和导航链接一起更新。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop" data-iso="2026-09-13T20:30:00-04:00" data-title="到家" data-place="Crowne at 501">
+        <div class="stop-grid">
+          <div class="stop-time">~20:30</div>
+          <div>
+            <h3 class="stop-title">回到 Durham</h3>
+            <a class="stop-place mapLink" data-place="home" href="#">Crowne at 501 Apartments, 2031 Honeycutt Dr, Durham, NC 27707</a>
+            <p class="stop-note">时间是估算的，晚饭地点定了之后会跟着调整。</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. 待办清单 -->
+  <section>
+    <h2>待办清单</h2>
+    <ul class="todo-list">
+      <li>打电话或用 Resy 确认 Village Tavern 周日午饭 — (336) 748-0221</li>
+      <li>在 Reynolda House 官网买 1:30pm 场次的门票（建议尽早买）</li>
+      <li>定下生日晚饭的餐厅和时间，告诉 Claude 更新页面</li>
+      <li>出发前一晚看一眼实时天气和路况</li>
+    </ul>
+  </section>
+
+  <!-- 6. 实用贴士 -->
+  <section>
+    <h2>实用贴士</h2>
+    <ul class="tips-list">
+      <li><strong>门票：</strong>Reynolda House 成人票 $18；花园和温室全年免费，天亮到天黑都能进。</li>
+      <li><strong>停车：</strong>Wake Forest 周末对访客开放大部分停车场，不需要许可证。Reynolda Village／House 有自己的免费停车场。</li>
+      <li><strong>信号：</strong>Reynolda 一带部分区域手机信号一般，建议提前把地址存好或截图，别完全依赖实时导航。</li>
+      <li><strong>穿着：</strong>9 月中旬北卡白天暖、傍晚转凉，建议穿好走路的鞋，带件薄外套（博物馆里空调可能开得比较足）。</li>
+      <li><strong>周一提醒：</strong>如果计划有变，注意 Reynolda House 每周一、以及感恩节、圣诞节前后等假日不开门（这次去的周日不受影响）。</li>
+    </ul>
+  </section>
+
+  <footer class="page">
+    数据来自公开信息，出发前建议再核实一次门票、预订和路况。
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var ADDR = {
+    home:   "2031 Honeycutt Dr, Durham, NC 27707",
+    wfu:    "Wait Chapel, Wake Forest University, Winston-Salem, NC 27109",
+    village:"2201 Reynolda Road, Winston-Salem, NC 27106",
+    tavern: "221 Reynolda Village, Winston-Salem, NC 27106",
+    house:  "2250 Reynolda Road, Winston-Salem, NC 27106"
+  };
+
+  function navUrl(destination){
+    return "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(destination) + "&travelmode=driving";
+  }
+  function multiNavUrl(origin, waypoints, destination){
+    var url = "https://www.google.com/maps/dir/?api=1";
+    url += "&origin=" + encodeURIComponent(origin);
+    url += "&destination=" + encodeURIComponent(destination);
+    if (waypoints && waypoints.length){
+      url += "&waypoints=" + waypoints.map(encodeURIComponent).join("%7C");
+    }
+    url += "&travelmode=driving";
+    return url;
+  }
+
+  // Wire up every single-place map link
+  document.querySelectorAll(".mapLink").forEach(function(el){
+    var place = el.getAttribute("data-place");
+    if (ADDR[place]){
+      el.setAttribute("href", navUrl(ADDR[place]));
+      el.setAttribute("target", "_blank");
+      el.setAttribute("rel", "noopener");
+    }
+  });
+
+  // Wire up the full-day multi-stop nav button
+  var fullDayBtn = document.getElementById("fullDayNav");
+  if (fullDayBtn){
+    fullDayBtn.setAttribute("href", multiNavUrl(
+      ADDR.home,
+      [ADDR.wfu, ADDR.village, ADDR.tavern, ADDR.house],
+      ADDR.home
+    ));
+  }
+
+  // ---- Countdown + "next event" highlight ----
+  var stops = Array.prototype.slice.call(document.querySelectorAll(".stop[data-iso]"));
+  var parsed = stops.map(function(el){
+    return {
+      el: el,
+      date: new Date(el.getAttribute("data-iso")),
+      title: el.getAttribute("data-title"),
+      place: el.getAttribute("data-place")
+    };
+  });
+
+  var heroEl = document.getElementById("hero");
+  var heroTitle = document.getElementById("heroTitle");
+  var heroPlace = document.getElementById("heroPlace");
+  var heroCountdown = document.getElementById("heroCountdown");
+  var cdD = document.getElementById("cdD"), cdH = document.getElementById("cdH"),
+      cdM = document.getElementById("cdM"), cdS = document.getElementById("cdS");
+
+  function pad(n){ return String(n).padStart(2, "0"); }
+
+  function tick(){
+    var now = new Date();
+
+    stops.forEach(function(el){ el.classList.remove("is-next"); });
+
+    var next = null;
+    for (var i = 0; i < parsed.length; i++){
+      if (parsed[i].date.getTime() > now.getTime()){ next = parsed[i]; break; }
+    }
+
+    if (next){
+      next.el.classList.add("is-next");
+      heroEl.classList.remove("done");
+      heroTitle.textContent = next.title;
+      heroPlace.textContent = next.place || "";
+      heroCountdown.style.display = "";
+
+      var diff = next.date.getTime() - now.getTime();
+      var d = Math.floor(diff / 86400000);
+      var h = Math.floor((diff % 86400000) / 3600000);
+      var m = Math.floor((diff % 3600000) / 60000);
+      var s = Math.floor((diff % 60000) / 1000);
+      cdD.textContent = d;
+      cdH.textContent = pad(h);
+      cdM.textContent = pad(m);
+      cdS.textContent = pad(s);
+    } else {
+      heroEl.classList.add("done");
+      heroTitle.textContent = "今天的行程结束啦";
+      heroPlace.textContent = "希望是美好的一天 🎂";
+      heroCountdown.style.display = "none";
+    }
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // ---- Day/night theme, rechecked periodically ----
+  function applyTheme(){
+    var h = new Date().getHours();
+    var isNight = (h >= 19 || h < 7);
+    document.documentElement.dataset.theme = isNight ? "night" : "day";
+  }
+  setInterval(applyTheme, 60000);
+
+})();
+</script>
+</body>
+</html>
